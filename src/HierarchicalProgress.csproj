@@ -1,8 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9</LangVersion>
     <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <PackageId>HierarchicalProgress</PackageId>
+    <Title>HierarchicalProgress</Title>
+    <Authors>ProphetLamb</Authors>
+    <Copyright>Copyright (c) ProphetLamb</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ProphetLamb/HierarchicalProgress</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ProphetLamb/HierarchicalProgress</RepositoryUrl>
+    <PackageTags>c#,progress</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
