@@ -16,6 +16,7 @@
     <PackageProjectUrl>https://github.com/ProphetLamb/HierarchicalProgress</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ProphetLamb/HierarchicalProgress</RepositoryUrl>
     <PackageTags>c#,progress</PackageTags>
+    <PackageVersion>0.0.1</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
