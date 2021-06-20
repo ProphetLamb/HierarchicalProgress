@@ -2,37 +2,64 @@
 
 using GenericRange;
 
+using HierarchicalProgress.Events;
+using HierarchicalProgress.Exceptions;
+
 namespace HierarchicalProgress
 {
     /// <summary>
-    ///     Defines a hierarchical provider for progress updates.
+    ///     Defines a strongly typed hierarchical provider for progress updates.
     /// </summary>
-    /// <typeparam name="T">The <see cref="IProgressValue"/> type of the change.</typeparam>
-    public interface IHierarchicalProgress<T> : IProgress<T> where T : IProgressValue
+    /// <typeparam name="TProgressReport">The <see cref="IProgressReport"/> type of the change.</typeparam>
+    public interface IHierarchicalProgress<TProgressReport> : IProgress<TProgressReport>, IObservable<TProgressReport> where TProgressReport : IProgressReport, new()
     {
-        /// <summary>
-        ///     Weak event handler reporting changes to the progress value. 
-        /// </summary>
-        event EventHandler<ProgressChangedEventArgs<T>> ProgressChanged;
+        event EventHandler<ProgressResetEventArgs<TProgressReport>> Reset;
 
-        /// <summary>
-        ///     The range associated with this instance of <see cref="IHierarchicalProgress{T}"/> within the <see cref="IProgress{T}"/> can report.
-        /// </summary>
-        public Range<double> ProgressRange { get; }
+        event EventHandler<ProgressCompletedEventArgs<TProgressReport>> Completed; 
         
-        /// <summary>
-        ///     The maximum value of the top-most progress, used to determine the offset and length of the <see cref="ProgressRange"/>.
-        /// </summary>
+        event EventHandler<ProgressReportedEventArgs<TProgressReport>> Reported;
+        
+        /// <summary>Represents minimum and maximum progress value.</summary>
+        /// <remarks><see cref="Index{T}.IsFromEnd"/> has to be <see langword="false"/>.</remarks>
+        Range<double> ProgressBoundaries { get; }
+        
+        /// <summary>Represents the current progress value in the range of <see cref="ProgressBoundaries"/>.</summary>
         /// <remarks>
-        ///     Same throughout all <see cref="Slice"/>s of <see cref="IHierarchicalProgress{T}"/>.
+        ///     Any reported progress value will be mapped from <see cref="ReportBoundaries"/> to <see cref="ProgressBoundaries"/> to assign a value to <see cref="Progress"/>.
+        ///     <br/>
+        ///     <see cref="Index{T}.IsFromEnd"/> has to be <see langword="false"/>.
         /// </remarks>
-        public double MaximumProgress { get; }
+        Index<double> Progress { get; }
         
-        /// <summary>
-        ///     Creates a <see cref="IHierarchicalProgress{T}"/> representing a slice of the progress of the current instance.
-        /// </summary>
-        /// <param name="range">The range of values represented by the slice.</param>
-        /// <returns>A new instance of <see cref="IHierarchicalProgress{T}"/> representing a slice of the progress of the current instance.</returns>
-        IHierarchicalProgress<T> Slice(Range<double> range);
+        /// <summary>Represents the portion of the <see cref="ProgressBoundaries"/> reserved for slices of the progress.</summary>
+        double AllocatedProgress { get; }
+        
+        /// <summary>Represents the minimum and maximum progress values allowed to be reported.</summary>
+        /// <remarks>
+        ///     The upper limit is negatively influenced by <see cref="AllocatedProgress"/> in proportion to the percentage of <see cref="ProgressBoundaries"/>.
+        ///     If <see cref="AllocatedProgress"/> equals the length of <see cref="ProgressBoundaries"/> the range will be empty.
+        ///     <br/>
+        ///     <see cref="Index{T}.IsFromEnd"/> has to be <see langword="false"/>.
+        /// </remarks>
+        Range<double> ReportBoundaries { get; }
+        
+        /// <summary>Indicates whether the progress is completed or not.</summary>
+        /// <remarks>Once <see langword="true"/> subsequent progress reports will throw a <see cref="InvalidProgressStateException"/>.</remarks>
+        bool IsCompleted { get; }
+        
+        /// <summary>Represents the latest reported progress.</summary>
+        TProgressReport? LatestReport { get; }
+        
+        /// <summary>Creates a new <see cref="IHierarchicalProgress{TProgressValue}"/>.</summary>
+        /// <param name="reportBoundaries">The value assigned to <see cref="ReportProgressBoundaries"/> of the slice.</param>
+        /// <param name="allocateProgress">The amount of the progress of this instance to allocate to the slice. Directly added to <see cref="AllocatedProgress"/>.</param>
+        /// <returns>A new <see cref="IHierarchicalProgress{TProgressValue}"/> representing a protion of this progress.</returns>
+        /// <remarks>Observes changed to the created <see cref="IHierarchicalProgress{TProgressValue}"/> and reports them.</remarks>
+        IHierarchicalProgress<TProgressReport> Slice(Range<double> reportBoundaries, double allocateProgress);
+        
+        /// <summary>Reports the progress provider as complete.</summary>
+        /// <param name="report">The report that completes the progress.</param>
+        /// <remarks>Once completed subsequent progress reports will throw a <see cref="InvalidProgressStateException"/>.</remarks>
+        void ReportComplete(TProgressReport report);
     }
 }
