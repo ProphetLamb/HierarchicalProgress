@@ -1,0 +1,119 @@
+﻿<UserControl x:Class="HierarchicalProgress.Demo.Controls.ProgressControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:models="clr-namespace:HierarchicalProgress.Demo.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300"
+             d:DataContext="{d:DesignInstance models:ProgressViewModel}"
+             Background="LightGray">
+    <UserControl.DataContext>
+        <models:ProgressViewModel/>
+    </UserControl.DataContext>
+    <Grid>
+        <ProgressBar
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="4"
+            Value="{Binding Progress, Mode=OneWay}"
+            Minimum="{Binding ProgressMinimum, Mode=OneWay}"
+            Maximum="{Binding ProgressMaximum, Mode=OneWay}"/>
+        
+        <Label
+            Grid.Row="1"
+            Grid.Column="0"
+            Content="Allocated"/>
+        <TextBox
+            Grid.Row="1"
+            Grid.Column="1"
+            Text="{Binding AllocatedProgress, Mode=OneWay}"
+            IsReadOnly="True"/>
+        
+        <Label
+            Grid.Row="1"
+            Grid.Column="2"
+            Content="IsCompleted"/>
+        <TextBox
+            Grid.Row="1"
+            Grid.Column="3"
+            Text="{Binding IsCompleted, Mode=OneWay}"
+            IsReadOnly="True"/>
+        
+        <Label
+            Grid.Row="2"
+            Grid.Column="0"
+            Content="ReportMinimum"/>
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="1"
+            Text="{Binding ReportMinimum, Mode=OneWay}"
+            IsReadOnly="True"/>
+        
+        <Label
+            Grid.Row="2"
+            Grid.Column="2"
+            Content="ReportMaximum"/>
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="3"
+            Text="{Binding ReportMaximum, Mode=OneWay}"
+            IsReadOnly="True"/>
+        
+        <Label
+            Grid.Row="3"
+            Grid.Column="0"
+            Content="LatestChange"/>
+        <TextBox
+            Grid.Row="3"
+            Grid.Column="1"
+            Text="{Binding LatestChange, Mode=OneWay}"
+            IsReadOnly="True"/>
+        
+        <Label
+            Grid.Row="3"
+            Grid.Column="2"
+            Content="LatestChangeDelta"/>
+        <TextBox
+            Grid.Row="3"
+            Grid.Column="3"
+            Text="{Binding LatestChangeDelta, Mode=OneWay}"
+            IsReadOnly="True"/>
+        
+        <Label
+            Grid.Row="4"
+            Grid.Column="0"
+            Content="LatestReport"/>
+        <TextBox
+            Grid.Row="4"
+            Grid.Column="1"
+            Text="{Binding LatestReport, Mode=OneWay}"
+            IsReadOnly="True"/>
+        
+        
+        <DataGrid
+            Grid.Row="5"
+            Grid.Column="0"
+            Grid.ColumnSpan="4"
+            ItemsSource="{Binding PreviousReports, Mode=OneWay}"
+            IsReadOnly="True"
+            AutoGenerateColumns="True">
+        </DataGrid>
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+    </Grid>
+</UserControl>

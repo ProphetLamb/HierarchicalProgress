@@ -1,0 +1,67 @@
+﻿<UserControl x:Class="HierarchicalProgress.Demo.Controls.ProgressReportControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:HierarchicalProgress.Demo.Controls"
+             xmlns:models="clr-namespace:HierarchicalProgress.Demo.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300"
+             d:DataContext="{d:DesignInstance models:ProgressReportViewModel}"
+             Background="LightGray">
+    <UserControl.DataContext>
+        <models:ProgressReportViewModel/>
+    </UserControl.DataContext>
+    <Grid>
+        <Label
+            Grid.Column="0"
+            Content="Progress"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"/>
+        <Slider
+            Grid.Column="1"
+            Minimum="{Binding Progress.ReportMinimum, Mode=OneWay}"
+            Maximum="{Binding Progress.ReportMaximum, Mode=OneWay}"
+            Value="{Binding ReportProgress}"
+            VerticalAlignment="Center"/>
+        
+        <Label
+            Grid.Column="2"
+            Content="Message"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"/>
+        <TextBox
+            Grid.Column="3"
+            Text="{Binding Message}"
+            VerticalAlignment="Center"/>
+        
+        <Label
+            Grid.Column="4"
+            Content="Inner"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"/>
+        <TextBox
+            Grid.Column="5"
+            Text="{Binding Inner, Mode=OneWay}"
+            IsReadOnly="True"
+            VerticalAlignment="Center"/>
+        
+        <Button
+            Grid.Column="6"
+            Content="Report"
+            Command="{x:Static models:ProgressReportViewModel.Report}"
+            CommandParameter="{Binding .}"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"/>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+    </Grid>
+</UserControl>
