@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 using GenericRange;
 using GenericRange.Extensions;
+using HierarchicalProgress.Exceptions;
 
 namespace HierarchicalProgress
 {
@@ -29,39 +30,42 @@ namespace HierarchicalProgress
 
             public void OnError(Exception error)
             {
-                throw new NotSupportedException("OnError is not supported.", error);
+                ThrowHelper.ThrowNotSupportedException_OnError(error);
             }
 
             public void OnNext(TProgressReport value)
             {
-                if (!TryGetOrUnsubscribe(out var slice, out var route))
-                    return;
-                double sliceProgress = slice.ReportBoundaries.Map(slice.ProgressBoundaries, value.ReportProgress);
-                if (!slice.ProgressBoundaries.Contains(sliceProgress))
-                    throw new IndexOutOfRangeException($"The index {sliceProgress} is outside of the range {slice.ProgressBoundaries}.");
-                lock (route!._sliceObserverSyncLock)
+                if (TryGetOrUnsubscribe(out var slice, out var route))
                 {
-                    Index<double> progress = route.Progress.Value + slice.LatestChange.Delta;
-                    TProgressReport routed = route.Route(progress, value);
-                    route.Report(routed);
+                    decimal sliceProgress = slice.ReportBoundaries.Map(slice.ProgressBoundaries, value.ReportProgress);
+
+                    ThrowHelper.ThrowIndexOutOfRangeException_IfNotContained(slice.ProgressBoundaries, sliceProgress);
+
+                    lock (route!._sliceObserverSyncLock)
+                    {
+                        Index<decimal> progress = route.Progress.Value + slice.LatestChange.Delta;
+                        TProgressReport routed = route.Route(progress, value);
+                        route.Report(routed);
+                    }
                 }
             }
 
             private bool TryGetOrUnsubscribe([NotNullWhen(true)] out HierarchicalProgress<TProgressReport>? slice, [NotNullWhen(true)] out HierarchicalProgress<TProgressReport>? route)
             {
-                if (Unsubscriber == null)
+                if (Unsubscriber != null)
                 {
+                    if (_slice.TryGetTarget(out slice) && _route.TryGetTarget(out route))
+                    {
+                        return true;
+                    }
+
+                    Unsubscribe();
+
                     slice = null;
                     route = null;
                     return false;
                 }
-                if (_slice.TryGetTarget(out slice) && _route.TryGetTarget(out route))
-                {
-                    return true;
-                }
-                
-                Unsubscribe();
-                
+
                 slice = null;
                 route = null;
                 return false;

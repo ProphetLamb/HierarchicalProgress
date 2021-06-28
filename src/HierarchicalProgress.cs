@@ -22,9 +22,9 @@ namespace HierarchicalProgress
         public HierarchicalProgress(Range<decimal> progressBoundaries, Range<decimal> reportBoundaries)
             : base(progressBoundaries, reportBoundaries)
         { }
-        
+
 #endregion
-        
+
 #region Fields
 
         private readonly List<IObserver<TProgressReport>> _observers = new();
@@ -34,24 +34,24 @@ namespace HierarchicalProgress
 #endregion
 
 #region Public members
-        
+
         public override HierarchicalProgress<TProgressReport> Slice(Range<decimal> reportBoundaries, decimal allocateProgress)
         {
             decimal totalAvailableProgress = ProgressBoundaries.GetOffsetAndLength().Length;
             decimal freeProgress = totalAvailableProgress - AllocatedProgress - allocateProgress;
             if (freeProgress < 0)
                 ThrowHelper.ThrowArgumentOutOfRangeException_InsufficientFreeProgress(ExceptionArgument.allocateProgress);
-            
+
             // Calculate new ReportBoundaries
             decimal freeProgressPercent = freeProgress / totalAvailableProgress;
             (decimal reportOff, decimal reportLen) = OriginReportBoundaries.GetOffsetAndLength();
-            
+
             ReportBoundaries = new Range<decimal>(reportOff, reportOff + reportLen * freeProgressPercent);
             AllocatedProgress -= allocateProgress;
 
             Range<decimal> sliceProgressBoundaries = new(ProgressBoundaries.Start.Value, ProgressBoundaries.Start.Value + allocateProgress);
             var slice = new HierarchicalProgress<TProgressReport>(sliceProgressBoundaries, reportBoundaries);
-            
+
             SliceObserver observer = new(this, slice);
             observer.Unsubscriber = Subscribe(observer);
 
@@ -79,15 +79,15 @@ namespace HierarchicalProgress
             ThrowIfCompleted(IsCompleted, change);
             // Only completion can be done without a report.
             Debug.Assert(report != null || change == ProgressChange.Completed, "report != null || change == ProgressChange.Completed");
-            
+
             decimal progress = change switch {
                 ProgressChange.Completed => ProgressBoundaries.End.Value,
                 ProgressChange.Reset => ProgressBoundaries.Start.Value,
                 _ => ReportBoundaries.Map(ProgressBoundaries, report!.ReportProgress)
             };
-            
+
             ThrowHelper.ThrowIndexOutOfRangeException_IfNotContained(ProgressBoundaries, progress);
-            
+
             TProgressReport? previous = LatestReport;
             LatestChange = (change, progress - Progress.Value);
             Progress = progress;
@@ -115,7 +115,7 @@ namespace HierarchicalProgress
 
                 OnReported(previousProgress, reportedProgress, change);
             }
-            
+
             switch (change)
             {
                 case ProgressChange.Reset:
@@ -129,19 +129,17 @@ namespace HierarchicalProgress
 
         protected override ProgressChange GetReportProgressChange(TProgressReport? previous, TProgressReport report)
         {
-            ProgressChange changeType = previous?.ReportProgress.CompareTo(report.ReportProgress) switch {
+            if (report.ReportProgress <= ReportBoundaries.Start.Value)
+                return ProgressChange.Reset;
+            if (report.ReportProgress >= ReportBoundaries.End.Value)
+                return ProgressChange.Completed;
+            return previous?.ReportProgress.CompareTo(report.ReportProgress) switch {
                 < 0 => ProgressChange.Increment,
                 0 => ProgressChange.None,
-                > 0 => ProgressChange.Decrement,
-                null => ProgressChange.Increment
+                > 0 => ProgressChange.Decrement
             };
-            if (report.ReportProgress - Double.Epsilon <= ProgressBoundaries.Start.Value)
-                changeType = ProgressChange.Reset;
-            else if (report.ReportProgress >= ProgressBoundaries.End.Value - Double.Epsilon)
-                changeType = ProgressChange.Completed;
-            return changeType;
         }
-        
+
         /// <summary>Routes the <see cref="TProgressReport"/> with the specified <paramref name="progressValue"/> thought the <see cref="HierarchicalProgress{TProgressReport}"/>.</summary>
         /// <param name="progressValue">The progress index within <see cref="HierarchicalProgressBase{TProgressReport}.ProgressBoundaries"/>.</param>
         /// <param name="inner">The report to route.</param>

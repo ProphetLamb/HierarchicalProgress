@@ -7,8 +7,8 @@ namespace HierarchicalProgress
     {
         internal sealed class Unsubscriber : IDisposable
         {
-            private IList<IObserver<TProgressReport>> _observers;
-            private IObserver<TProgressReport> _observer;
+            private readonly IList<IObserver<TProgressReport>> _observers;
+            private readonly IObserver<TProgressReport> _observer;
 
             internal Unsubscriber(IList<IObserver<TProgressReport>> observers, IObserver<TProgressReport> observer)
             {
