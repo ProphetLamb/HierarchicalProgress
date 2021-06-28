@@ -10,8 +10,8 @@ namespace HierarchicalProgress
         /// <summary>
         ///     The <see langword="double"/> indicating the progress reported by the <see cref="IProgressReport"/>.
         /// </summary>
-        public double ReportProgress { get; set; }
-        
-        public IProgressReport? Inner { get; set; }
+        decimal ReportProgress { get; set; }
+
+        IProgressReport? Inner { get; set; }
     }
 }

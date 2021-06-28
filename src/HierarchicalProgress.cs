@@ -19,7 +19,7 @@ namespace HierarchicalProgress
     {
 #region Ctor
 
-        public HierarchicalProgress(Range<double> progressBoundaries, Range<double> reportBoundaries)
+        public HierarchicalProgress(Range<decimal> progressBoundaries, Range<decimal> reportBoundaries)
             : base(progressBoundaries, reportBoundaries)
         { }
         
@@ -35,21 +35,21 @@ namespace HierarchicalProgress
 
 #region Public members
         
-        public override HierarchicalProgress<TProgressReport> Slice(Range<double> reportBoundaries, double allocateProgress)
+        public override HierarchicalProgress<TProgressReport> Slice(Range<decimal> reportBoundaries, decimal allocateProgress)
         {
-            double totalAvailableProgress = ProgressBoundaries.GetOffsetAndLength().Length;
-            double freeProgress = totalAvailableProgress - AllocatedProgress - allocateProgress;
+            decimal totalAvailableProgress = ProgressBoundaries.GetOffsetAndLength().Length;
+            decimal freeProgress = totalAvailableProgress - AllocatedProgress - allocateProgress;
             if (freeProgress < 0)
-                throw new ArgumentOutOfRangeException(nameof(allocateProgress), "Insufficient progressValue to allocate.");
+                ThrowHelper.ThrowArgumentOutOfRangeException_InsufficientFreeProgress(ExceptionArgument.allocateProgress);
             
             // Calculate new ReportBoundaries
-            double freeProgressPercent = freeProgress / totalAvailableProgress;
-            (double reportOff, double reportLen) = OriginReportBoundaries.GetOffsetAndLength();
+            decimal freeProgressPercent = freeProgress / totalAvailableProgress;
+            (decimal reportOff, decimal reportLen) = OriginReportBoundaries.GetOffsetAndLength();
             
-            ReportBoundaries = new Range<double>(reportOff, reportOff + reportLen * freeProgressPercent);
+            ReportBoundaries = new Range<decimal>(reportOff, reportOff + reportLen * freeProgressPercent);
             AllocatedProgress -= allocateProgress;
 
-            Range<double> sliceProgressBoundaries = new(ProgressBoundaries.Start.Value, ProgressBoundaries.Start.Value + allocateProgress);
+            Range<decimal> sliceProgressBoundaries = new(ProgressBoundaries.Start.Value, ProgressBoundaries.Start.Value + allocateProgress);
             var slice = new HierarchicalProgress<TProgressReport>(sliceProgressBoundaries, reportBoundaries);
             
             SliceObserver observer = new(this, slice);
@@ -80,14 +80,13 @@ namespace HierarchicalProgress
             // Only completion can be done without a report.
             Debug.Assert(report != null || change == ProgressChange.Completed, "report != null || change == ProgressChange.Completed");
             
-            double progress = change switch {
+            decimal progress = change switch {
                 ProgressChange.Completed => ProgressBoundaries.End.Value,
                 ProgressChange.Reset => ProgressBoundaries.Start.Value,
                 _ => ReportBoundaries.Map(ProgressBoundaries, report!.ReportProgress)
             };
             
-            if (!ProgressBoundaries.Contains(progress))
-                throw new IndexOutOfRangeException($"The index {progress} is outside of the range {ProgressBoundaries}.");
+            ThrowHelper.ThrowIndexOutOfRangeException_IfNotContained(ProgressBoundaries, progress);
             
             TProgressReport? previous = LatestReport;
             LatestChange = (change, progress - Progress.Value);
@@ -148,7 +147,7 @@ namespace HierarchicalProgress
         /// <param name="inner">The report to route.</param>
         /// <returns>The routed report.</returns>
         /// <remarks>Called when a change in TProgressReport is observed in a slice.</remarks>
-        protected virtual TProgressReport Route(Index<double> progressValue, TProgressReport inner)
+        protected virtual TProgressReport Route(Index<decimal> progressValue, TProgressReport inner)
         {
             TProgressReport routed = new() {
                 ReportProgress = ReportBoundaries.Map(ProgressBoundaries, progressValue),
